@@ -46,7 +46,7 @@ Videos are downsampled to `.gif` for display. Click for original videos. Prompts
 * 📍 Open-Sora-v1 released. Model weights are available [here](#model-weights). With only 400K video clips and 200 H800 days (compared with 152M samples in Stable Video Diffusion), we are able to generate 2s 512×512 videos.
 * ✅ Three stages training from an image diffusion model to a video diffusion model. We provide the weights for each stage.
 * ✅ Support training acceleration including accelerated transformer, faster T5 and VAE, and sequence parallelism. Open-Sora improve **55%** training speed when training on 64x512x512 videos. Details locates at [acceleration.md](docs/acceleration.md).
-* ✅ We provide data preprocessing pipeline, including [downloading](/tools/datasets/README.md), [video cutting](/tools/scenedetect/README.md), and [captioning](/tools/caption/README.md) tools. Our data collection plan can be found at [datasets.md](docs/datasets.md).
+* ✅ We provide video cutting and captioning tools for data preprocessing. Instructions can be found [here](tools/data/README.md) and our data collection plan can be found at [datasets.md](docs/datasets.md).
 * ✅ We find VQ-VAE from [VideoGPT](https://wilson1yan.github.io/videogpt/index.html) has a low quality and thus adopt a better VAE from [Stability-AI](https://huggingface.co/stabilityai/sd-vae-ft-mse-original). We also find patching in the time dimension deteriorates the quality. See our **[report](docs/report_v1.md)** for more discussions.
 * ✅ We investigate different architectures including DiT, Latte, and our proposed STDiT. Our **STDiT** achieves a better trade-off between quality and speed. See our **[report](docs/report_v1.md)** for more discussions.
 * ✅ Support clip and T5 text conditioning.
@@ -130,28 +130,24 @@ Our model's weight is partially initialized from [PixArt-α](https://github.com/
 
 ## Inference
 
-To run inference with our provided weights, first download [T5](https://huggingface.co/DeepFloyd/t5-v1_1-xxl/tree/main) weights into `pretrained_models/t5_ckpts/t5-v1_1-xxl`. Then download the model weights from [huggingface](https://huggingface.co/hpcai-tech/Open-Sora/tree/main). Run the following commands to generate samples. To change sampling prompts, modify the txt file passed to `--prompt-path`. See [here](docs/structure.md#inference-config-demos) to customize the configuration.
+To run inference with our provided weights, first download [T5](https://huggingface.co/DeepFloyd/t5-v1_1-xxl/tree/main) weights into `pretrained_models/t5_ckpts/t5-v1_1-xxl`. Then download the model weights. Run the following commands to generate samples. See [here](docs/structure.md#inference-config-demos) to customize the configuration.
 
 ```bash
-# Sample 16x256x256 (5s/sample, 100 time steps, 22 GB memory)
-torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x256x256.py --ckpt-path ./path/to/your/ckpt.pth --prompt-path ./asserts/texts/t2v_samples.txt
-# Auto Download
-torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x256x256.py --ckpt-path OpenSora-v1-HQ-16x256x256.pth --prompt-path ./assets/texts/t2v_samples.txt
+# Sample 16x256x256 (5s/sample)
+torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x256x256.py --ckpt-path ./path/to/your/ckpt.pth
 
-# Sample 16x512x512 (20s/sample, 100 time steps, 24 GB memory)
-torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x512x512.py --ckpt-path ./path/to/your/ckpt.pth --prompt-path ./asserts/texts/t2v_samples.txt
-# Auto Download
-torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x512x512.py --ckpt-path OpenSora-v1-HQ-16x512x512.pth --prompt-path ./assets/texts/t2v_samples.txt
+# Sample 16x512x512 (20s/sample, 100 time steps)
+torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/16x512x512.py --ckpt-path ./path/to/your/ckpt.pth
 
 # Sample 64x512x512 (40s/sample, 100 time steps)
-torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/64x512x512.py --ckpt-path ./path/to/your/ckpt.pth --prompt-path ./asserts/texts/t2v_samples.txt
+torchrun --standalone --nproc_per_node 1 scripts/inference.py configs/opensora/inference/64x512x512.py --ckpt-path ./path/to/your/ckpt.pth
 
 # Sample 64x512x512 with sequence parallelism (30s/sample, 100 time steps)
 # sequence parallelism is enabled automatically when nproc_per_node is larger than 1
-torchrun --standalone --nproc_per_node 2 scripts/inference.py configs/opensora/inference/64x512x512.py --ckpt-path ./path/to/your/ckpt.pth --prompt-path ./asserts/texts/t2v_samples.txt
+torchrun --standalone --nproc_per_node 2 scripts/inference.py configs/opensora/inference/64x512x512.py --ckpt-path ./path/to/your/ckpt.pth
 ```
 
-The speed is tested on H800 GPUs. For inference with other models, see [here](docs/commands.md) for more instructions. To lower the memory usage, set a smaller `vae.micro_batch_size` in the config (slightly lower sampling speed).
+The speed is tested on H800 GPUs. For inference with other models, see [here](docs/commands.md) for more instructions.
 
 ## Data Processing
 

@@ -70,6 +70,12 @@ def main():
     # 3.2. move to device & eval
     vae = vae.to(device, dtype).eval()
     model = model.to(device, dtype).eval()
+    
+    # 79 M
+    total_params = sum(p.numel() for p in vae.parameters())
+    print(f"Total parameters of VAE: {total_params/1e6} Mb")
+    total_params = sum(p.numel() for p in model.parameters())
+    print(f"Total parameters of model: {total_params/1e6} Mb")
 
     # 3.3. build scheduler
     scheduler = build_module(cfg.scheduler, SCHEDULERS)
